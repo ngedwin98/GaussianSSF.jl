@@ -1,0 +1,9 @@
+name = "GaussianSSF"
+uuid = "555e6017-eccf-45cb-b1a5-830490d56c85"
+authors = ["ngedwin <ngedwin98@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
