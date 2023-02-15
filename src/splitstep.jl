@@ -70,16 +70,25 @@ end
 
 _rk_substep!(x, y, z, c) = (x .= y .+ z ./ c)
 
+
 function gssf!(sim::GSSFSim{RK4IP}, Nsteps::Int, Nsave::Int=1, save_fun! = sim->Array.(sim.state))
-    time = sim.method.dt * collect(0 : Nsteps)
+    time = 0
+    savesteps = Nsave == 1 ? [Nsteps+1] : round.(Int, range(1, Nsteps+1, length=Nsave))
+    tout = (savesteps .-1).*sim.method.dt
     output = []
+    
+    next_save = popfirst!(savesteps)
     for t in 1 : Nsteps
-        step!(sim, time[t])
-        if t % div(Nsteps,Nsave) == 0
+        if t == next_save
             push!(output, save_fun!(sim))
+            next_save = popfirst!(savesteps)
         end
+        step!(sim, time)
+        time += sim.method.dt
     end
-    return output, time
+    push!(output, save_fun!(sim))
+    
+    return output, tout
 end
 
 function wavespace(N, L)
