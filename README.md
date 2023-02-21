@@ -160,7 +160,9 @@ x, dx = realspace(N_grid, X_window)
 ```
 The three-wave mixing interaction on a $\chi^{(2)}$ waveguide involves fundamental harmonics and second harmonics with field operators $\hat{\Psi}_x^{(1)}(z)$ and $\hat{\Psi}_x^{(2)}(z)$, respectively. The nonlinear part of the coupled-wave equation takes a form
 $$
-F^{(1)}(z,\hat{\Psi}_x(z))=\epsilon \hat\Psi_x^{(1)\dagger}(z)\hat\Psi_x^{(2)}(z)\\
+F^{(1)}(z,\hat{\Psi}_x(z))=\epsilon \hat\Psi_x^{(1)\dagger}(z)\hat\Psi_x^{(2)}(z)
+$$
+$$
 F^{(2)}(z,\hat{\Psi}_x(z))=\frac{\epsilon}{2}\hat\Psi_x^{(1)2}(z),
 $$
 which can be defined via the code
@@ -172,8 +174,8 @@ For the linear part of the dynamics, we can define the linear operators as
 ```
 β1_2 = 1.0
 β2_2 = 2.0
-κ1 = 1.0
-κ2 = 1.0
+κ1 = 0.2
+κ2 = 0.0
 
 β1 = taylor(0, 0, β1_2, 0) 
 β2 = taylor(0, 0, β2_2, 0)
@@ -184,8 +186,8 @@ for instance, where ``κ1`` and ``κ2`` are the loss rates of FH and SH, respect
 
 The functions ``model``, ``D1`` and ``D2`` characterizes the structure of the coupled-wave equations on the analytic level. For practical numerical simulations, we also need to specify the total propagation time ``Z``, the number of time steps ``N_steps``, and the number of time slices to save the data ``N_save``. These system parameters can be specified as
 ```
-Z = 2.0
-N_steps = 200
+Z = 0.5
+N_steps = 400
 N_save = 50
 
 sim = GSSFSim(RK4IP(Z/N_steps), model, N_grid, X_window, (D1,D2))
@@ -194,8 +196,8 @@ where ``sim`` object defines an RK4 integrator to solve the coupled-wave equatio
 
 Finally, we specify the initial condition for the simulation ``init``. As an example, we consider an initial coherent Gaussian pump pulse with width ``σz`` and peak amplitude ``β0`` as
 ```
-σx = 1.0
-β0 = 1.0
+σx = 0.5
+β0 = 10.0
 
 φ1 = zero
 φ2(x) = β0*exp(-x^2/(2σx^2))
@@ -208,7 +210,9 @@ Now, we are ready to run the simulation by a line of code
 ```
 output, zout = gssf!(sim, N_steps, N_save)
 ```
+The output contains the mean-field and covariance matrices of the fields. By calculating the eigenvalues of the signal covariance matrix, we obtain pulse quadratures that are squeezed/anti-squeezed. The figure below shows 5 pulse quadratures with largest and smallest noise quadrature. 
 
+![pulsed-squeezing](./docs/images/pulsed-squeezing.png)
 
 
 
