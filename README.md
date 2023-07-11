@@ -1,20 +1,24 @@
 # Introduction
-This package provides a simulation method for calculating the quantum dynamics of a multimode bosonic field travelling in a one-dimensional waveguide, subject to dispersion and local nonlinearity.
-The prototypical use case (i.e., the one we will draw from for illustration) is nonlinear propagation of an ultrafast optical pulse in a waveguided medium.
-However, the generic setup is any Heisenberg equation of motion of the form
+This package provides a simulation method for calculating the quantum dynamics of a multimode, one-dimensional field, subject to dispersion and nonlinearity.
+The prototypical use case is nonlinear propagation of an ultrafast optical pulse in a waveguided medium.
+However, the most general setup is any Heisenberg equation of motion of the form
 
 $$
 \mathrm{i} \partial_z \hat\Psi^{(i)}_x(z) = F^{(i)}(z,\hat\Psi_x(z)) + D^{(i)}(-\mathrm{i}\partial_x) \hat\Psi^{(i)}_x(z),
 $$
 
-where $\hat\Psi_x$ is a vector-valued bosonic field operator whose components $\hat\Psi^{(i)}_x$ satisfy
+where, for each $i$, $\hat\Psi_x^{(i)}$ is a vector-valued bosonic field operator defined on a grid with coordinate $x$. The field components $\hat\Psi^{(i)}_x$ satisfy
 
-$$\[\hat\Psi^{(i)}_x, \hat\Psi^{(j)\dagger}_{y}\] = \delta_{ij} \delta(x-y);$$
+$$
+\left\[ \hat\Psi_{x}^{(i)}, \hat\Psi_{y}^{(j)\dagger} \right\] = \delta_{ij} \delta(x-y).
+$$
 
-$F^{(i)}$ are any sufficiently well-behaved (nonlinear) functions; and $D^{(i)}(-\mathrm{i}\partial_x)$ are linear operators on $\hat\Psi_x$ representing the effect of dispersion.
+In an optical system, the index $i$ can, e.g., enumerate different pulse envelopes (e.g., fundamental- vs. second-harmonic), whereas $x$ would be the pulse coordinate (e.g., in femtoseconds).
+
+Here, $F^{(i)}$ are any sufficiently well-behaved (nonlinear) functions (one for each field) that can depend on both the position and the field, and $D^{(i)}(-\mathrm{i}\partial_x)$ are linear operators acting on each field representing the effect of linear dispersion.
 In this generic setting, we use $z$ to denote the coordinate along which $\hat\Psi_x$ evolves; we henceforth suppress the $z$ dependence of our field.
 
-In a classical setting (i.e., when $\hat\Psi_x$ is a c-number function in $x$), an efficient way to solve (1) is to use a split-step Fourier (SSF) method, in which the first term is applied in real space for $x$ while the second term is applied in the reciprocal space of $x$; in reciprocal space with coordinate $\xi$, the action of $D^{(i)}$ becomes simply $D^{(i)}(2\pi\xi)\hat\Psi^{(i)}_\xi$, acting on the Fourier transform of $\hat\Psi_x$.
+In the classical theory (i.e., when $\hat\Psi_x$ is replaced by a c-number function of $x$), an efficient way to solve the dynamics is to use a split-step Fourier (SSF) method, in which the first term is applied on the "real space" grid $x$ while the second term is applied in the "reciprocal space" of $x$; in reciprocal space with coordinate $\xi$, the action of $D^{(i)}$ becomes simply $D^{(i)}(2\pi\xi)\hat\Psi^{(i)}_\xi$, acting on the Fourier transform of $\hat\Psi_x$.
 In this package, we provide functionality for extending such SSF methods to capture leading-order quantum effects.
 
 More specifically, this package focuses on capturing second-order correlations in the quantum state via a *Gaussian-state approximation*, in which we derive equations of motion for both the mean-field components
@@ -25,20 +29,20 @@ as well as the covariance matrix elements
 
 $$
 \begin{align}
-\Sigma^{(i,j)}_{x,y} &= \langle \delta\hat\Psi^{(i)}_x \delta\hat\Psi^{(j)}_{y}\rangle \\
-\Pi^{(i,j)}_{x,y} &= \langle \delta\hat\Psi^{(i)\dagger}_x \delta\hat\Psi^{(j)}_{y}\rangle,
+\Sigma_{x,y}^{(i,j)} &= \langle \delta\hat\Psi_x^{(i)} \delta\hat\Psi_y^{(j)}\rangle \\
+\Pi_{x,y}^{(i,j)} &= \langle \delta\hat\Psi_x^{(i)\dagger} \delta\hat\Psi_y^{(j)}\rangle,
 \end{align}
 $$
 
-where $\delta\hat\Psi_x = \hat\Psi_x - \langle \hat\Psi_x \rangle$.
+where $\delta\hat\Psi_x = \hat\Psi_x - \langle \hat\Psi_x \rangle$ is the fluctuation operator corresponding to $\hat\Psi_x$. The mean-field components correspond to the usual classical field (with dynamical corrections), while the covariance matrices capture the statistics of quantum fluctuations and correlations.
 
-Under appropriate conditions, we can formulate a Gaussian-state approximation of the dynamics (1) in the generic form
+Under appropriate conditions, we can formulate a Gaussian-state approximation of the dynamics in the generic form
 
 $$
 \begin{align}
-\mathrm{i} \partial_z \Psi^{(i)}_x &= G^{(i)}(\Psi_x,\Sigma_{x,x},\Pi_{x,x}) + D^{(i)}(-\mathrm{i}\partial_x) \Psi^{(i)}_x, \\
-\mathrm{i} \partial_z \Sigma^{(i,j)}_{x,y} &= G^{(i,j)}_\Sigma(\Psi_x,\Psi_y,\Sigma_{x,y},\Pi_{x,y}) + D^{(i)}(-\mathrm{i}\partial_x) D^{(j)}(-\mathrm{i}\partial_y) \Sigma^{(i,j)}_{x,y}, \\
-\mathrm{i} \partial_z \Pi^{(i,j)}_{x,y} &= G^{(i,j)}_\Pi(\Psi_x,\Psi_y,\Sigma_{x,y},\Pi_{x,y}) + D^{(i)}(+\mathrm{i}\partial_x) D^{(j)}(-\mathrm{i}\partial_y) \Pi^{(i,j)}_{x,y},
+\mathrm{i} \partial_z \Psi_x^{(i)} &= G^{(i)}(\Psi_x,\Sigma_{x,x},\Pi_{x,x}) + D^{(i)}(-\mathrm{i}\partial_x) \Psi_x^{(i)}, \\
+\mathrm{i} \partial_z \Sigma_{x,y}^{(i,j)} &= G_\Sigma^{(i,j)}(\Psi_x,\Psi_y,\Sigma_{x,y},\Pi_{x,y}) + D^{(i)}(-\mathrm{i}\partial_x) D^{(j)}(-\mathrm{i}\partial_y) \Sigma_{x,y}^{(i,j)}, \\
+\mathrm{i} \partial_z \Pi_{x,y}^{(i,j)} &= G_\Pi^{(i,j)}(\Psi_x,\Psi_y,\Sigma_{x,y},\Pi_{x,y}) + D^{(i)}(+\mathrm{i}\partial_x) D^{(j)}(-\mathrm{i}\partial_y) \Pi_{x,y}^{(i,j)},
 \end{align}
 $$
 
@@ -47,8 +51,15 @@ This set of equations describe the (nonlinear) evolution of the Gaussian moments
 
 # Installation
 
+Note that [CUDA.jl](https://cuda.juliagpu.org/stable/installation/overview/) needs to be installed and functional in order to use this package. For now, a physical GPU is also required as `CuArray`s are generated internally; future development should target drop-in replacement of CuArrays with CPU arrays for small-scale numerical experiments.
+
+This package is currently not registered. To install in Julia, see [Pkg.jl](https://pkgdocs.julialang.org/v1/) or run the line
+```
+Pkg.add(name="https://github.com/ngedwin98/GaussianSSF.jl", version="0.x")
+```
+
 # Quick Start
-The following is a typical workflow for using this package.
+The following is a typical workflow. We focus on the use case of propagating an optical pulse in a nonlinear waveguide.
 
 ### 1. Set up grid
 Choose the extent $X_\text{window}$ of the pulse window in $x$ and the number of grid points $N_\text{grid}$ within this window.
@@ -73,14 +84,14 @@ $$
 D(2\pi\xi) = \sum_{j=0}^{|\beta|-1} \frac{\beta_{j}}{j!} \, (2\pi\xi)^j
 $$
 
-where $|\beta|$ is `length(β)` and $\beta_j$ is `β[j+1]`. (Note that `taylor()` is provided as a shorthand for `taylor(0,0,1)`.)
+where $|\beta|$ is `length(β)` and $\beta_j$ is `β[j+1]`. (Note that `taylor()` is also provided as a shorthand for `taylor(0,0,1)`.)
 
 ### 3. Specify nonlinear model
 Instantiate a `Model` to represent the nonlinear interaction. For example, if we want to signify a nonlinear Schrodinger equation (NLSE) with coupling constant `g`, then we can use
 ```
 model = NLSE(g)
 ```
-More details about models which have been implemented in this package, as well as how to write your own models, are provided under [Models](#models).
+More details about models which have been implemented in this package, as well as how to write your own models, are provided under [Implemented Models](#implemented-models).
 
 ### 4. Specify integration method
 Instantiate an `Integrator` to represent an integration method for stepping the solution forward along $z$. Currently, this package has implemented RK4IP (a fourth order Runge-Kutta method in the interaction picture), which is a fixed-step method. To signify that we want to use such a method with a time step $\mathrm{d}z$, we can use
@@ -110,7 +121,7 @@ $$
 \right)
 $$
 
-However, this default behavior can be modified (e.g., if we wish to neglect certain Gaussian moments or know certain moments are zero by symmetry). This can be done via multiple dispatch of the interface function `linear_setup` on different subtypes of `Model`: See more information under [Implementing new models](#implementing-new-models).
+However, this default behavior can be modified (e.g., if we wish to neglect certain Gaussian moments or know certain moments are zero by symmetry). This can be done by implementing your own method for the function `linear_setup` on different subtypes of `Model`: See more information under [Implementing new models](#implementing-new-models).
 
 ### 6. State initialization
 Initialize the state by calling `init_state!` on `sim` according to
@@ -125,7 +136,7 @@ For the [specialized model `ParallelizedMC`](##monte-carlo-classical-trajectorie
 ### 7. Run simulation
 Run the simulation! This can be done either by calling
 ```
-step!(sim, z) # RK4IP currently does not make use of the current position z
+step!(sim, z)
 ```
 which takes one step of the `Integrator`, or by calling
 ```
@@ -215,18 +226,10 @@ However, the state of the simulation is structured as a matrix whose columns rep
 
 # Implementing new models
 
-The interface for new models should be given below.
-
-## Derived models
-
-Derived models are subtypes of `DerivedModel <: Model` and objects `derived <: DerivedModel` should implement `derived.model` as a field.
-This allows for some degree of code reuse for the functions `nonlinear_setup` and `linear__setup`, `step`, which have default implementations on `derived.model`.
-That said, derived models can also dispatch on these functions to gain different functionality in how they operate.
+It is a central goal of this package to be as generic as possible. For that reason, in addition to the models implemented above, we also need an extensible framework for adding custom models, corresponding to custom coupled-wave equations. A full description of how this system works is forthcoming. Adventurous experts should look at the `Model` type, its subtypes, and how the various functions dispatch on them; also important to this system are the setup functions `nonlinear_setup` and `lineaer_setup`.
 
 # Example
 
-# To Dos
-
 # References
 
-1. <a name="gssfpaper"></a>E. Ng, R. Yanagimoto, M. Jankowski, M. M. Fejer, and H. Mabuchi. ``Nonlinear quantum-noise dynamics in ultrafast nanophotonics''. Manuscript in preparation.
+1. <a name="gssfpaper"></a>Edwin Ng, Ryotatsu Yanagimoto, Marc Jankowski, M. M. Fejer, and Hideo Mabuchi. "Quantum noise dynamics in nonlinear pulse propagation".
