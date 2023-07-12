@@ -83,6 +83,7 @@ will produce a Taylor-expanded dispersion model for a single field, which acts i
 $$
 D(2\pi\xi) = \sum_{j=0}^{|\beta|-1} \frac{\beta_{j}}{j!} \, (2\pi\xi)^j
 $$
+
 where $|\beta|$ is `length(β)` and $\beta_j$ is `β[j+1]`. (Note that `taylor()` is also provided as a shorthand for `taylor(0,0,1)`.)
 
 ### 3. Specify nonlinear model
@@ -239,12 +240,14 @@ x, dx = realspace(N_grid, X_window)
 ξ, dξ = wavespace(N_grid, X_window)
 ```
 The three-wave mixing interaction on a $\chi^{(2)}$ waveguide involves fundamental harmonics and second harmonics with field operators $\hat{\Psi}_x^{(1)}(z)$ and $\hat{\Psi}_x^{(2)}(z)$, respectively. The nonlinear part of the coupled-wave equation takes a form
+
 $$
-F^{(1)}(z,\hat{\Psi}_x(z))=\epsilon \hat\Psi_x^{(1)\dagger}(z)\hat\Psi_x^{(2)}(z)
+\begin{align}
+F^{(1)}(z,\hat{\Psi}_x(z))&=\epsilon \hat\Psi_x^{(1)\dagger}(z)\hat\Psi_x^{(2)}(z) \\
+F^{(2)}(z,\hat{\Psi}_x(z))&=\frac{\epsilon}{2}\hat\Psi_x^{(1)2}(z),
+\end{align}
 $$
-$$
-F^{(2)}(z,\hat{\Psi}_x(z))=\frac{\epsilon}{2}\hat\Psi_x^{(1)2}(z),
-$$
+
 which can be defined via the code
 ```
 ϵ = 1.0
@@ -294,6 +297,6 @@ The output contains the mean-field and covariance matrices of the fields. By cal
 
 ![pulsed-squeezing](./docs/images/pulsed-squeezing.png)
 
-# References
+# Reference
 
-1. <a name="gssfpaper"></a>Edwin Ng, Ryotatsu Yanagimoto, Marc Jankowski, M. M. Fejer, and Hideo Mabuchi. "Quantum noise dynamics in nonlinear pulse propagation".
+1. <a name="gssfpaper"></a>Edwin Ng*, Ryotatsu Yanagimoto*, Marc Jankowski, M. M. Fejer, and Hideo Mabuchi, "Quantum noise dynamics in nonlinear pulse propagation", [arXiv:2307.05464 [quant-ph]](https://arxiv.org/abs/2307.05464).
