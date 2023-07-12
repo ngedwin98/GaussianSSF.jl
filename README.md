@@ -83,7 +83,6 @@ will produce a Taylor-expanded dispersion model for a single field, which acts i
 $$
 D(2\pi\xi) = \sum_{j=0}^{|\beta|-1} \frac{\beta_{j}}{j!} \, (2\pi\xi)^j
 $$
-
 where $|\beta|$ is `length(β)` and $\beta_j$ is `β[j+1]`. (Note that `taylor()` is also provided as a shorthand for `taylor(0,0,1)`.)
 
 ### 3. Specify nonlinear model
@@ -229,6 +228,71 @@ However, the state of the simulation is structured as a matrix whose columns rep
 It is a central goal of this package to be as generic as possible. For that reason, in addition to the models implemented above, we also need an extensible framework for adding custom models, corresponding to custom coupled-wave equations. A full description of how this system works is forthcoming. Adventurous experts should look at the `Model` type, its subtypes, and how the various functions dispatch on them; also important to this system are the setup functions `nonlinear_setup` and `lineaer_setup`.
 
 # Example
+
+## Pulsed vacuum squeezing
+We consider vacuum squeezing on a $\chi^{(2)}$-nonlinear waveguide pumped by a broadband pulse. For the simulation, we first set the number of grids and the size of the simulation window:
+```
+N_grid = 2^8
+X_window = 10.0
+
+x, dx = realspace(N_grid, X_window)
+ξ, dξ = wavespace(N_grid, X_window)
+```
+The three-wave mixing interaction on a $\chi^{(2)}$ waveguide involves fundamental harmonics and second harmonics with field operators $\hat{\Psi}_x^{(1)}(z)$ and $\hat{\Psi}_x^{(2)}(z)$, respectively. The nonlinear part of the coupled-wave equation takes a form
+$$
+F^{(1)}(z,\hat{\Psi}_x(z))=\epsilon \hat\Psi_x^{(1)\dagger}(z)\hat\Psi_x^{(2)}(z)
+$$
+$$
+F^{(2)}(z,\hat{\Psi}_x(z))=\frac{\epsilon}{2}\hat\Psi_x^{(1)2}(z),
+$$
+which can be defined via the code
+```
+ϵ = 1.0
+model = QD3WM(ϵ)
+```
+For the linear part of the dynamics, we can define the linear operators as
+```
+β1_2 = 1.0
+β2_2 = 2.0
+κ1 = 0.2
+κ2 = 0.0
+
+β1 = taylor(0, 0, β1_2, 0) 
+β2 = taylor(0, 0, β2_2, 0)
+D1(k) = β1(k) - im*κ1
+D2(k) = β2(k) - im*κ2
+```
+for instance, where ``κ1`` and ``κ2`` are the loss rates of FH and SH, respectively, and we have assumed zero phase- and group-velocity mismatch. 
+
+The functions ``model``, ``D1`` and ``D2`` characterizes the structure of the coupled-wave equations on the analytic level. For practical numerical simulations, we also need to specify the total propagation time ``Z``, the number of time steps ``N_steps``, and the number of time slices to save the data ``N_save``. These system parameters can be specified as
+```
+Z = 0.5
+N_steps = 400
+N_save = 50
+
+sim = GSSFSim(RK4IP(Z/N_steps), model, N_grid, X_window, (D1,D2))
+```
+where ``sim`` object defines an RK4 integrator to solve the coupled-wave equations.
+
+Finally, we specify the initial condition for the simulation ``init``. As an example, we consider an initial coherent Gaussian pump pulse with width ``σz`` and peak amplitude ``β0`` as
+```
+σx = 0.5
+β0 = 10.0
+
+φ1 = zero
+φ2(x) = β0*exp(-x^2/(2σx^2))
+
+init_state!(sim, φ1, φ2)
+```
+where the initial signal state is a vacuum.
+
+Now, we are ready to run the simulation by a line of code
+```
+output, zout = gssf!(sim, N_steps, N_save)
+```
+The output contains the mean-field and covariance matrices of the fields. By calculating the eigenvalues of the signal covariance matrix, we obtain pulse quadratures that are squeezed/anti-squeezed. The figure below shows 5 pulse quadratures with largest and smallest noise quadrature. 
+
+![pulsed-squeezing](./docs/images/pulsed-squeezing.png)
 
 # References
 
