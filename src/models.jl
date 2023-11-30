@@ -45,7 +45,7 @@ end
 struct NLSE <: Model
     g::Float64
 end
-nonlinear_setup(model::NLSE, dz, dt, x0) = (model.g / dz * dt, similar(x0[1]))
+nonlinear_setup(model::NLSE, dz, dt, x0) = (1im*model.g / dz * dt, similar(x0[1]))
 function nonlinear_step!(::NLSE, x′, x, t, idgt, u)
     a, aa, a⁺a = x
     a′, aa′, a⁺a′ = x′
