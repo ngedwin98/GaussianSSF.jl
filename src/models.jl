@@ -114,6 +114,12 @@ function nonlinear_step!(::Classical{QD3WM}, x′, x, t, dϵt)
     b′ .= -1/2 .* a.*a
     apply_scalar!(x′, dϵt)
 end
+function nonlinear_step!(::Classical{NLSE}, x′, x, t, idgt, u)
+    a, = x
+    a′, = x′
+    a′ .= a .* abs2.(a)
+    apply_scalar!(x′, -idgt)
+end
 
 struct ParallelMC{M<:Classical} <: DerivedModel
     model::M
