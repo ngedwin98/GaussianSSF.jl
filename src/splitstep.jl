@@ -92,11 +92,13 @@ function gssf!(sim::GSSFSim{RK4IP}, Nsteps::Int, Nsave::Int=1, save_fun! = sim->
 end
 
 function wavespace(N, L)
-    ξ = fftfreq(N, (N-1)/L)
-    return fftshift(ξ), ξ[2]-ξ[1]
+    dξ = 1 / L
+    ξ = fftfreq(N, N * dξ)
+    return fftshift(ξ), dξ
 end
 
 function realspace(N, L)
-    z = fftfreq(N, L/(N-1)) .* N
-    return fftshift(z), z[2]-z[1]
+    dz = L / N
+    z = (-N/2 : N/2-1) * dz
+    return collect(z), dz
 end
