@@ -6,8 +6,7 @@ export init_state!, step!, gssf!
 export QD3WM, NLSE, Squeezing, Linearized, Classical, ParallelMC
 
 using LinearAlgebra
-using Base.Iterators
-using AbstractFFTs
+using FFTW
 using Base.Iterators
 
 include("models.jl")
