@@ -51,12 +51,19 @@ This set of equations describe the (nonlinear) evolution of the Gaussian moments
 
 # Installation
 
-Note that [CUDA.jl](https://cuda.juliagpu.org/stable/installation/overview/) needs to be installed and functional in order to use this package. For now, a physical GPU is also required as `CuArray`s are generated internally; future development should target drop-in replacement of CuArrays with CPU arrays for small-scale numerical experiments.
-
 This package is currently not registered. To install in Julia, see [Pkg.jl](https://pkgdocs.julialang.org/v1/) or run the line
 ```
-Pkg.add(name="https://github.com/ngedwin98/GaussianSSF.jl", version="0.x")
+Pkg.add(url="https://github.com/ngedwin98/GaussianSSF.jl")
 ```
+
+## Choosing a compute backend
+
+GaussianSSF can run on either the CPU or an NVIDIA GPU. The backend is selected by the array-type constructor you pass to `GSSFSim` via the `arrT` keyword. After this step, all internal arrays inherit that type.
+
+- **CPU (default, `arrT=Array`).** You must load a CPU FFT backend in your session, e.g. `using FFTW`. Nothing else is required.
+- **NVIDIA GPU (`arrT=CuArray`).** Load [CUDA.jl](https://cuda.juliagpu.org/stable/installation/overview/) with `using CUDA` and pass `arrT=CuArray`; CUDA.jl automatically supplies the `CuArray` FFT.
+
+You can also choose the numerical precision via the `elT` keyword, which sets the (complex) element type of all internal arrays (default `elT=ComplexF64`). Passing `elT=ComplexF32` can be more efficient for GPUs. Due to the formalism used in GSSF, only complex element types are allowed.
 
 # Quick Start
 The following is a typical workflow. We focus on the use case of propagating an optical pulse in a nonlinear waveguide.
@@ -144,11 +151,11 @@ gssf!(sim, N_steps], N_save=1, save_fun!=Array.(sim.state))
 ```
 which repeats `step!` for `N_steps` iterations starting from $z = 0$ (and, for `RK4IP` as the stepper, in steps of `dz`).
 Furthermore, whenever `div(N_steps, N_save) == 0` evaluates true, the result of `save_fun!(sim)` is appended to a data structure `output`.
-By default, `save_fun!` simply converts the entirety of `sim.state` into a tuple of `Array`s (from `CuArray`s).
+By default, `save_fun!` simply converts the entirety of `sim.state` into a tuple of `Array`s (copying back from the device when a GPU backend is used).
 At the end of the iteration, `output` is returned along with a corresponding vector `z` describing the value of $z$ at which the elements of output were obtained.
 
 ### 8. Analyze simulation results
-Finally, one can analyze the simulation results. This can either be done by looking at `sim.state` which provides the full Gaussian approximation of the quantum state at the end of the simulation (note that this is still stored as a tuple of `CuArray`s!), or by looking at `output` if `gssf!` was used.
+Finally, one can analyze the simulation results. This can either be done by looking at `sim.state` which provides the full Gaussian approximation of the quantum state at the end of the simulation (note that this is stored as a tuple of arrays on whichever backend you chose — e.g. `CuArray`s if you passed `arrT=CuArray`), or by looking at `output` if `gssf!` was used.
 
 # Implemented models
 

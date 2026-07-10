@@ -6,7 +6,7 @@ export init_state!, step!, gssf!
 export QD3WM, NLSE, Squeezing, Linearized, Classical, ParallelMC
 
 using LinearAlgebra
-using CUDA
+using Random
 using AbstractFFTs
 using Base.Iterators
 
