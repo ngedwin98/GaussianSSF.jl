@@ -15,19 +15,19 @@ struct GSSFSim{M<:Integrator,T<:Model,S,C,N,D}
     nonlinear_data::N
 end
 
-function GSSFSim(method::RK4IP, model::Model, N::Int, L::Real, Ω_funs)
-    linear_plans = _init_plans(method, model, Ω_funs, N, L)
-    state = CUDA.zeros.(ComplexF64, size.(linear_plans))
+function GSSFSim(method::RK4IP, model::Model, N::Int, L::Real, Ω_funs; arrT=Array, elT::Type{<:Complex}=ComplexF64)
+    linear_plans = _init_plans(method, model, Ω_funs, N, L, arrT{elT})
+    state = map(dims -> fill!(arrT{elT}(undef,dims), zero(elT)), size.(linear_plans))
     cache = (similar.(state), similar.(state), similar.(state))
     nonlinear_data = nonlinear_setup(model, L/N, method.dt, state)
     return GSSFSim(method, model, N, L, state, cache, linear_plans, nonlinear_data)
 end
 
-function _init_plans(method::RK4IP, model::Model, Ωk, N, L)
+function _init_plans(method::RK4IP, model::Model, Ωk, N, L, dataT)
     k, _ = wavespace(N, L)
     k = ifftshift(k)
-    cisdϕ = [cis.(-Ω.(2π.*k) .* method.dt ./ 2) for Ω ∈ Ωk]
-    return linear_setup(model, CuArray.(cisdϕ)...)
+    cisdϕ = [dataT(@. cis(-Ω(2π*k) * method.dt / 2)) for Ω ∈ Ωk]
+    return linear_setup(model, cisdϕ...)
 end
 
 function init_state!(sim::GSSFSim, φ0_funs...)
@@ -41,9 +41,10 @@ end
 function init_state!(sim::GSSFSim{<:Integrator,<:ParallelMC}, φ0_funs...)
     z, dz = realspace(sim.N, sim.L)
     for (i,φ0) ∈ enumerate(φ0_funs)
-        sim.state[i] .= CuArray(randn(ComplexF64, size(sim.state[i]))) ./ sqrt(2)
-#         CUDA.randn!(sim.state[i])
-        sim.state[i] .+= CuArray(φ0.(z) .* sqrt(dz))
+        randn!(sim.state[i])
+        sim.state[i] ./= sqrt(2)  # Enforces [a,a⁺] = 1
+        mean = φ0.(z) .* sqrt(dz)
+        sim.state[i] .+= copyto!(similar(sim.state[i], eltype(mean), size(mean)), mean)
     end
 end
 
