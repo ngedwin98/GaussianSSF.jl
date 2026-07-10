@@ -125,8 +125,8 @@ struct ParallelMC{M<:Classical} <: DerivedModel
     model::M
     Ntraj::Int
 end
-linear_setup(par::ParallelMC, cisdϕ...) where T = LinearPlan.(cisdϕ, par.Ntraj)
-nonlinear_step!(par::ParallelMC, data...) where T = nonlinear_step!(par.model, data...)
+linear_setup(par::ParallelMC, cisdϕ...) = LinearPlan.(cisdϕ, par.Ntraj)
+nonlinear_step!(par::ParallelMC, data...) = nonlinear_step!(par.model, data...)
 
 function apply_scalar!(x, h)
     for xi in x
