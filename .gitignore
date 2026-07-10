@@ -1,2 +1,6 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+# Resolved environments are not tracked for a library package
+/Manifest.toml
+
